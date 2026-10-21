@@ -6,15 +6,23 @@ from google.genai import errors
 MODEL = "gemini-3.5-flash-lite"
 load_dotenv()
 client = genai.Client()
+history = []
 
-for attempt in range(1,4):
-    try:
-        response = client.models.generate_content(
-		model = MODEL,
-		contents = "Explain what a variable is in one sentence.",
-		)
-        print(response.text)
+while True:
+    question = input("You: ").lower()
+    if question == "quit":
         break
-    except errors.ServerError as e:
-        print(f"Attempt {attempt} failed: {e.code}")
-        time.sleep(5 * attempt)
+    history.append({"role":"user", "parts":[{"text":question}]})
+    for attempt in range(1,4):
+        try:
+            response = client.models.generate_content(
+		model = MODEL,
+		contents = history,
+		)
+            answer = response.text
+            print(f"AI: {answer}")
+            history.append({"role":"model", "parts":[{"text":answer}]})
+            break
+        except errors.ServerError as e:
+            print(f"Attempt {attempt} failed: {e.code}")
+            time.sleep(5 * attempt)
